@@ -1,0 +1,8 @@
+name: HeadTimestamps
+main: net.evmodder.HeadTimestamps.HeadTimestamps
+author: EvModder
+description: Adds timestamps to dropped heads.
+website: https://dev.bukkit.org/projects/dropheads
+version: 1.0
+api-version: 1.13
+depend: [DropHeads]

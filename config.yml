@@ -1,0 +1,10 @@
+# Datetime format added to head items, set to '' to disable
+date-time-format:
+  player: '&8yyyy-MM-dd'
+  default: ''
+
+# Locale used in parsing format (from options defined in java.util.Locale)
+locale: 'us'
+
+
+#TODO: in-game time (world time)
