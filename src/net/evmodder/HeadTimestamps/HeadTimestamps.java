@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -57,12 +58,14 @@ public final class HeadTimestamps extends JavaPlugin implements Listener{
 			}
 		}
 		if(!formatters.isEmpty()) getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler
+			@EventHandler(ignoreCancelled = true)
 			public void onEntityBehead(EntityBeheadEvent evt){
-				DateTimeFormatter formatter = formatters.get(evt.getEntityType());
+				final DateTimeFormatter formatter = formatters.get(evt.getEntityType());
 				if(formatter != null){
-					ItemMeta meta = evt.getHeadItem().getItemMeta();
-					meta.getLore().add(formatter.format(LocalDateTime.now()));
+					final ItemMeta meta = evt.getHeadItem().getItemMeta();
+					final List<String> lore = meta.getLore();
+					lore.add(formatter.format(LocalDateTime.now()));
+					meta.setLore(lore);
 					evt.getHeadItem().setItemMeta(meta);
 				}
 			}

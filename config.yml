@@ -1,7 +1,11 @@
 # Datetime format added to head items, set to '' to disable
+# Can be set for any entity type (eg: skeleton, player, default)
+# Format options/examples:
+# https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/SimpleDateFormat.html
+
 date-time-format:
-  player: '&8yyyy-MM-dd'
-  default: ''
+  player: '&6yyyy-MM-dd'
+  default: 'h:mm a'
 
 # Locale used in parsing format (from options defined in java.util.Locale)
 locale: 'us'
