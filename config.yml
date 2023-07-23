@@ -5,7 +5,7 @@
 
 date-time-format:
   player: '&6yyyy-MM-dd'
-  default: 'h:mm a'
+  default: ''
 
 # Locale used in parsing format (from options defined in java.util.Locale)
 locale: 'us'

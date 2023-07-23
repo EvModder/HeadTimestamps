@@ -20,6 +20,7 @@ import net.evmodder.DropHeads.events.EntityBeheadEvent;
 public final class HeadTimestamps extends JavaPlugin implements Listener{
 	private FileConfiguration config;
 	private DropHeads dropheadsPlugin = null;
+	private DateTimeFormatter defaultFormatter = null;
 	private HashMap<EntityType, DateTimeFormatter> formatters = null;
 
 	private DropHeads getDropHeadsPlugin(){
@@ -56,11 +57,12 @@ public final class HeadTimestamps extends JavaPlugin implements Listener{
 				}
 				catch(IllegalArgumentException ex){getLogger().severe("Unknown EntityType in 'date-time-format': "+entityName);}
 			}
+			defaultFormatter = formatters.get(EntityType.UNKNOWN);
 		}
 		if(!formatters.isEmpty()) getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler(ignoreCancelled = true)
 			public void onEntityBehead(EntityBeheadEvent evt){
-				final DateTimeFormatter formatter = formatters.get(evt.getEntityType());
+				final DateTimeFormatter formatter = formatters.getOrDefault(evt.getEntityType(), defaultFormatter);
 				if(formatter != null){
 					final ItemMeta meta = evt.getHeadItem().getItemMeta();
 					final List<String> lore = meta.getLore();
