@@ -3,6 +3,6 @@ main: net.evmodder.HeadTimestamps.HeadTimestamps
 author: EvModder
 description: Adds timestamps to dropped heads.
 website: https://github.com/EvModder/HeadTimestamps
-version: 1.1
+version: 1.2
 api-version: 1.13
 depend: [DropHeads]

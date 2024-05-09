@@ -1,14 +1,15 @@
-# Datetime format added to head items, set to '' to disable
-# Can be set for any entity type (eg: skeleton, player, default)
-# Format options/examples:
+# Available tags:
+# ${TIMESTAMP}, ${VICTIM}, ${KILLER}
+
+# ${DATE} format examples:
 # https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/SimpleDateFormat.html
 
-date-time-format:
-  player: '&6yyyy-MM-dd'
-  default: ''
-
-# Locale used in parsing format (from options defined in java.util.Locale)
+# Locale for parsing date format (options defined in java.util.Locale)
 locale: 'us'
 
-
-#TODO: in-game time (world time)
+# Configure for any EntityType (eg: skeleton, player, default)
+lore-format:
+  default: '${yyyy-MM-dd}'
+  player: >-
+    Killed by ${KILLER}
+    ${yyyy-MM-dd}

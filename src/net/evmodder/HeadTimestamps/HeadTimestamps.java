@@ -20,8 +20,9 @@ import net.evmodder.DropHeads.events.EntityBeheadEvent;
 public final class HeadTimestamps extends JavaPlugin implements Listener{
 	private FileConfiguration config;
 	private DropHeads dropheadsPlugin = null;
-	private DateTimeFormatter defaultFormatter = null;
-	private HashMap<EntityType, DateTimeFormatter> formatters = null;
+	//private DateTimeFormatter defaultFormatter = null;
+	private HashMap<String, DateTimeFormatter> dateFormats = null;
+	private HashMap<EntityType, String> loreFormats = null;
 
 	private DropHeads getDropHeadsPlugin(){
 		if(dropheadsPlugin == null) dropheadsPlugin = (DropHeads)getServer().getPluginManager().getPlugin("DropHeads");
@@ -37,6 +38,7 @@ public final class HeadTimestamps extends JavaPlugin implements Listener{
 	@Override public void reloadConfig(){
 		InputStream defaultConfig = getClass().getResourceAsStream("/config.yml");
 		if(defaultConfig != null){
+			// Save our config in same folder as DropHeads' config
 			FileIO.verifyDir(getDropHeadsPlugin());
 			config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
 		}
@@ -44,33 +46,65 @@ public final class HeadTimestamps extends JavaPlugin implements Listener{
 
 	@Override public void onEnable(){
 		reloadConfig();
-		formatters = new HashMap<>();
-		Locale locale = Locale.forLanguageTag(config.getString("locale", "us"));
-		
-		ConfigurationSection datetimeFormats = config.getConfigurationSection("date-time-format");
-		if(datetimeFormats != null){
-			for(String entityName : datetimeFormats.getKeys(/*deep=*/false)){
+		loreFormats = new HashMap<>();
+		ConfigurationSection loreFormatSection = config.getConfigurationSection("lore-format");
+		if(loreFormatSection != null){
+			for(String entityName : loreFormatSection.getKeys(/*deep=*/false)){
 				try{
 					final EntityType eType = EntityType.valueOf(entityName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
-					final String formatStr = ChatColor.translateAlternateColorCodes('&', datetimeFormats.getString(entityName));
-					formatters.put(eType, DateTimeFormatter.ofPattern(formatStr, locale));
+					final String formatStr = ChatColor.translateAlternateColorCodes('&', loreFormatSection.getString(entityName));
+					loreFormats.put(eType, formatStr);
 				}
-				catch(IllegalArgumentException ex){getLogger().severe("Unknown EntityType in 'date-time-format': "+entityName);}
+				catch(IllegalArgumentException ex){getLogger().severe("Unknown EntityType in 'lore-format': "+entityName);}
 			}
-			defaultFormatter = formatters.get(EntityType.UNKNOWN);
 		}
-		if(!formatters.isEmpty()) getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler(ignoreCancelled = true)
-			public void onEntityBehead(EntityBeheadEvent evt){
-				final DateTimeFormatter formatter = formatters.getOrDefault(evt.getEntityType(), defaultFormatter);
-				if(formatter != null){
-					final ItemMeta meta = evt.getHeadItem().getItemMeta();
-					final List<String> lore = meta.getLore();
-					lore.add(formatter.format(LocalDateTime.now()));
-					meta.setLore(lore);
-					evt.getHeadItem().setItemMeta(meta);
+		if(!loreFormats.isEmpty()){
+			dateFormats = new HashMap<>();
+			getServer().getPluginManager().registerEvents(new Listener(){
+				// Substitute a tag
+				String substituteTag(final String tag, EntityBeheadEvent evt){
+					switch(tag){
+						case "TIMESTAMP":
+							return ""+System.currentTimeMillis();
+						case "VICTIM":
+							return evt.getVictim().getName();
+						case "KILLER":
+							return evt.getKiller().getName();
+						default:
+							DateTimeFormatter f = dateFormats.get(tag);
+							if(f == null){
+								final Locale locale = Locale.forLanguageTag(config.getString("locale", "us"));
+								f = DateTimeFormatter.ofPattern(tag, locale);
+								dateFormats.put(tag, f);
+							}
+							return f.format(LocalDateTime.now());
+					}
 				}
-			}
-		}, this);
+				@EventHandler(ignoreCancelled = true)
+				public void onEntityBehead(EntityBeheadEvent evt){
+					final String formatter = loreFormats.getOrDefault(evt.getEntityType(), loreFormats.get(EntityType.UNKNOWN));
+					if(formatter != null){
+						// Parse formatter
+						final StringBuilder result = new StringBuilder();
+						int i=formatter.indexOf("${"),j=formatter.indexOf('}', i),s=0;
+						while(i != -1 && j != -1){
+							result.append(formatter.substring(s, i));
+							result.append(substituteTag(formatter.substring(i+2, j), evt));
+							s = j+1;
+							i = formatter.indexOf("${", j);
+							j = formatter.indexOf('}', i);
+						}
+						result.append(formatter.substring(s));
+
+						// Set lore
+						final ItemMeta meta = evt.getHeadItem().getItemMeta();
+						final List<String> lore = meta.getLore();
+						for(String line : result.toString().split("\\n")) lore.add(line);
+						meta.setLore(lore);
+						evt.getHeadItem().setItemMeta(meta);
+					}
+				}
+			}, this);
+		}
 	}
 }
